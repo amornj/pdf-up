@@ -3,6 +3,8 @@ pyproject.toml
 src/pdf_up/__init__.py
 src/pdf_up/cli.py
 src/pdf_up/config.py
+src/pdf_up/notebooks.py
+src/pdf_up/prompts.py
 src/pdf_up/services.py
 src/pdf_up/zotero_api.py
 src/pdf_up.egg-info/PKG-INFO

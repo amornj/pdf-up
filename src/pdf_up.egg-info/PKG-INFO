@@ -18,7 +18,7 @@ pdf-up /path/to/paper.pdf
 
 It runs four tasks concurrently:
 
-1. **Readwise Reader** import
+1. **Readwise Reader** email import of the actual PDF via Mail.app
 2. **NotebookLM** source upload to a preconfigured notebook
 3. **Zotero** Web API upload (item creation + PDF attachment)
 4. **Obsidian** markdown summary generation
@@ -70,16 +70,17 @@ Example config:
 
 ```json
 {
-  "readwise_token": "YOUR_READWISE_TOKEN",
+  "readwise_token": "OPTIONAL_IF_USING_EMAIL_IMPORT",
+  "reader_email_account": "Google",
   "notebook_id": "YOUR_NOTEBOOKLM_NOTEBOOK_ID",
   "obsidian_dir": "/Users/home/projects/obsidian/journal",
   "reader_location": "new",
   "reader_tags": ["pdf-up"],
   "summary_model": "sonnet",
   "zotero_api_key": "YOUR_ZOTERO_API_KEY",
-  "zotero_user_id": "YOUR_ZOTERO_USER_ID",
+  "zotero_user_id": "7734498",
   "zotero_library_type": "user",
-  "zotero_collection": "",
+  "zotero_collection": "amyloidosis",
   "notebooklm_cli": "/Users/home/.local/bin/nlm",
   "claude_cli": "/Users/home/.local/bin/claude"
 }
@@ -90,6 +91,7 @@ Example config:
 These override config file values when set:
 
 - `PDF_UP_READWISE_TOKEN`
+- `PDF_UP_READER_EMAIL_ACCOUNT`
 - `PDF_UP_NOTEBOOK_ID`
 - `PDF_UP_OBSIDIAN_DIR`
 - `PDF_UP_READER_LOCATION`
@@ -98,6 +100,7 @@ These override config file values when set:
 - `PDF_UP_ZOTERO_API_KEY`
 - `PDF_UP_ZOTERO_USER_ID`
 - `PDF_UP_ZOTERO_LIBRARY_TYPE`
+- `PDF_UP_ZOTERO_COLLECTION`
 - `PDF_UP_NLM_CLI`
 - `PDF_UP_CLAUDE_CLI`
 
@@ -137,9 +140,9 @@ pdf-up --init-config
 The CLI prints one status line per target, for example:
 
 ```text
-[OK] readwise: Saved to Reader: ...
+[OK] readwise: Sent PDF attachment to add@readwise.io via Mail account Google
 [OK] notebooklm: Uploaded to NotebookLM ...
-[OK] zotero: Triggered import in Zotero via open -a
+[OK] zotero: Uploaded to Zotero collection amyloidosis (...)
 [OK] obsidian: Wrote markdown summary: ...
 ```
 
@@ -150,18 +153,18 @@ Exit code:
 ## Notes / caveats
 
 ### Readwise Reader
-The public Reader API does **not** expose a true raw-binary PDF upload endpoint. `pdf-up` uses the public API to create a Reader document in `pdf` category from extracted content and metadata. This is the most reliable supported API path available today.
+`pdf-up` uses **Reader email import** for actual PDFs by sending the file as an attachment to `add@readwise.io` through your local Mail.app account.
 
 ### NotebookLM
 This tool expects the local `nlm` CLI to already be authenticated.
 
 ### Zotero
-Zotero integration uses the [Zotero Web API v3](https://www.zotero.org/support/dev/web_api/v3/start). You need a Zotero API key (generate at https://www.zotero.org/settings/keys) and your user ID.
+Zotero integration uses the [Zotero Web API v3](https://www.zotero.org/support/dev/web_api/v3/start). You need a Zotero API key and user ID.
 
 The integration:
-- Looks up or creates a target collection (if `zotero_collection` is set)
-- Creates a top-level document item with the PDF title
-- Uploads the PDF binary as an imported-file attachment via Zotero file storage
+- looks up or creates a target collection
+- creates a top-level document item with the PDF title
+- uploads the PDF binary as an imported-file attachment via Zotero file storage
 
 Supports both user and group libraries via the `zotero_library_type` config field.
 

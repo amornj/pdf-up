@@ -47,5 +47,12 @@ Key fields:
 
 Environment variable overrides are supported.
 
+## Interactive mode
+By default, `pdf-up` shows current settings (Obsidian folder, NotebookLM notebook by name, Zotero collection) and asks for confirmation before executing. Users can edit any setting inline. The `--yes` / `--non-interactive` flag bypasses all prompts. The `--notebook <name>` flag resolves a notebook name to its ID via the `nlm` CLI.
+
+Key modules:
+- `prompts.py` — interactive prompt loop with confirm
+- `notebooks.py` — NotebookLM name↔ID resolution via `nlm notebook list`
+
 ## Design goal
 Fast, one-command ingestion with concurrent execution and clear per-target success/failure reporting.

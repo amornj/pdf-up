@@ -100,7 +100,23 @@ These override config file values when set:
 pdf-up ~/Downloads/paper.pdf
 ```
 
-Optional overrides:
+By default, `pdf-up` runs in **interactive mode**: it shows current settings (Obsidian folder, NotebookLM notebook name, Zotero collection), lets you edit them inline, and asks for confirmation before executing.
+
+To skip the interactive prompts and run immediately with current/default settings:
+
+```bash
+pdf-up ~/Downloads/paper.pdf --yes
+# or
+pdf-up ~/Downloads/paper.pdf --non-interactive
+```
+
+Override NotebookLM notebook by name (resolved to ID automatically):
+
+```bash
+pdf-up ~/Downloads/paper.pdf --notebook amyloidosis
+```
+
+Other overrides:
 
 ```bash
 pdf-up ~/Downloads/paper.pdf \
