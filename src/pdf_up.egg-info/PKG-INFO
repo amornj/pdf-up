@@ -20,16 +20,16 @@ It runs four tasks concurrently:
 
 1. **Readwise Reader** import
 2. **NotebookLM** source upload to a preconfigured notebook
-3. **Zotero** import trigger
+3. **Zotero** Web API upload (item creation + PDF attachment)
 4. **Obsidian** markdown summary generation
 
 ## What it does
 
 Given a local PDF path, `pdf-up`:
 - extracts text from the PDF
-- sends the document into Reader using the public Reader API
+- sends the original PDF as an email attachment to `add@readwise.io` using Mail.app
 - uploads the original file to NotebookLM using the local `nlm` CLI
-- opens the file in Zotero for import
+- uploads the PDF to Zotero via the Web API (creates a document item with PDF attachment)
 - generates a markdown summary in your configured Obsidian folder using Claude CLI
 
 ## Install
@@ -76,7 +76,10 @@ Example config:
   "reader_location": "new",
   "reader_tags": ["pdf-up"],
   "summary_model": "sonnet",
-  "zotero_app": "Zotero",
+  "zotero_api_key": "YOUR_ZOTERO_API_KEY",
+  "zotero_user_id": "YOUR_ZOTERO_USER_ID",
+  "zotero_library_type": "user",
+  "zotero_collection": "",
   "notebooklm_cli": "/Users/home/.local/bin/nlm",
   "claude_cli": "/Users/home/.local/bin/claude"
 }
@@ -92,7 +95,9 @@ These override config file values when set:
 - `PDF_UP_READER_LOCATION`
 - `PDF_UP_READER_TAGS`
 - `PDF_UP_SUMMARY_MODEL`
-- `PDF_UP_ZOTERO_APP`
+- `PDF_UP_ZOTERO_API_KEY`
+- `PDF_UP_ZOTERO_USER_ID`
+- `PDF_UP_ZOTERO_LIBRARY_TYPE`
 - `PDF_UP_NLM_CLI`
 - `PDF_UP_CLAUDE_CLI`
 
@@ -108,7 +113,9 @@ Optional overrides:
 pdf-up ~/Downloads/paper.pdf \
   --notebook-id YOUR_NOTEBOOK_ID \
   --obsidian-dir /Users/home/projects/obsidian/journal/inbox \
-  --summary-model sonnet
+  --summary-model sonnet \
+  --zotero-collection amyloidosis \
+  --reader-email-account Google
 ```
 
 ## Commands
@@ -149,13 +156,14 @@ The public Reader API does **not** expose a true raw-binary PDF upload endpoint.
 This tool expects the local `nlm` CLI to already be authenticated.
 
 ### Zotero
-Automatic Zotero ingest currently depends on a local Zotero automation surface being available. If Zotero's local API/debug bridge is not enabled, `pdf-up` will report that explicitly instead of pretending the import worked.
+Zotero integration uses the [Zotero Web API v3](https://www.zotero.org/support/dev/web_api/v3/start). You need a Zotero API key (generate at https://www.zotero.org/settings/keys) and your user ID.
 
-Current behavior:
-- tries local automation when available
-- otherwise returns a clear failure status for Zotero only
+The integration:
+- Looks up or creates a target collection (if `zotero_collection` is set)
+- Creates a top-level document item with the PDF title
+- Uploads the PDF binary as an imported-file attachment via Zotero file storage
 
-So Zotero must be installed locally, and deeper automation may require enabling Zotero local API/debug bridge.
+Supports both user and group libraries via the `zotero_library_type` config field.
 
 ### Obsidian summaries
 Summary generation uses the local Claude CLI. Very large PDFs are summarized from extracted text content rather than embedded page images.

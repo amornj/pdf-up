@@ -4,6 +4,7 @@ src/pdf_up/__init__.py
 src/pdf_up/cli.py
 src/pdf_up/config.py
 src/pdf_up/services.py
+src/pdf_up/zotero_api.py
 src/pdf_up.egg-info/PKG-INFO
 src/pdf_up.egg-info/SOURCES.txt
 src/pdf_up.egg-info/dependency_links.txt

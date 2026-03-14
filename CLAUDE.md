@@ -17,9 +17,9 @@ Targets:
 - Language: Python
 - Packaging: `pyproject.toml` with console entry point `pdf-up`
 - PDF text extraction: PyMuPDF (`fitz`)
-- Readwise: Reader API v3 save endpoint
+- Readwise: Mail.app email import to `add@readwise.io` with PDF attachment
 - NotebookLM: local `nlm` CLI with `source add --file --wait`
-- Zotero: local app import trigger via `open -a Zotero <file>`
+- Zotero: Web API v3 (collection lookup/create, item creation, PDF attachment upload)
 - Summary generation: local `claude --print --permission-mode bypassPermissions`
 
 ## Important caveat
@@ -37,7 +37,10 @@ Key fields:
 - `reader_location`
 - `reader_tags`
 - `summary_model`
-- `zotero_app`
+- `zotero_api_key`
+- `zotero_user_id`
+- `zotero_library_type`
+- `zotero_collection`
 - `notebooklm_cli`
 - `claude_cli`
 

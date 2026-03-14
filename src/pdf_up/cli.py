@@ -25,6 +25,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--notebook-id', help='Override configured NotebookLM notebook id')
     parser.add_argument('--obsidian-dir', help='Override configured Obsidian output dir')
     parser.add_argument('--summary-model', help='Override Claude model alias for summary generation')
+    parser.add_argument('--zotero-collection', help='Target Zotero collection name')
+    parser.add_argument('--reader-email-account', help='Mail account name to send PDF to add@readwise.io')
     return parser
 
 
@@ -51,6 +53,8 @@ def main() -> int:
         config['obsidian_dir'] = args.obsidian_dir
     if args.summary_model:
         config['summary_model'] = args.summary_model
+    if args.zotero_collection:
+        config['zotero_collection'] = args.zotero_collection
 
     pdf = extract_pdf(Path(args.pdf_path).expanduser().resolve())
 
