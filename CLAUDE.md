@@ -19,11 +19,11 @@ Targets:
 - PDF text extraction: PyMuPDF (`fitz`)
 - Readwise: Mail.app email import to `add@readwise.io` with PDF attachment
 - NotebookLM: local `nlm` CLI with `source add --file --wait`
-- Zotero: Web API v3 (collection lookup/create, item creation, PDF attachment upload)
+- Zotero: Web API v3 (collection lookup/create, parent item creation, PDF attachment upload)
 - Summary generation: local `claude --print --permission-mode bypassPermissions`
 
 ## Important caveat
-Readwise's public Reader API does not expose a true binary-PDF upload endpoint. The current implementation saves the extracted PDF content into Reader as a `pdf` category document using the public API. This is the most reliable available API path unless a private/native upload flow is added later.
+Reader uses Mail.app email import of the actual PDF attachment. Zotero uses the Web API and requires a valid API key/user ID with file-write permissions.
 
 ## Config
 Primary config file:
@@ -31,7 +31,8 @@ Primary config file:
 `~/.config/pdf-up/config.json`
 
 Key fields:
-- `readwise_token`
+- `readwise_token` (optional if using email import only)
+- `reader_email_account`
 - `notebook_id`
 - `obsidian_dir`
 - `reader_location`
