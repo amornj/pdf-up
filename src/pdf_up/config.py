@@ -55,6 +55,12 @@ def load_config() -> dict[str, Any]:
     return data
 
 
+def save_config(data: dict[str, Any]) -> Path:
+    ensure_config_dir()
+    CONFIG_PATH.write_text(json.dumps(data, indent=2) + '\n')
+    return CONFIG_PATH
+
+
 def write_sample_config(force: bool = False) -> Path:
     ensure_config_dir()
     if CONFIG_PATH.exists() and not force:

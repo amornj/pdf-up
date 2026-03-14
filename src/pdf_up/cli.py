@@ -4,9 +4,9 @@ import argparse
 import concurrent.futures
 from pathlib import Path
 
-from .config import CONFIG_PATH, load_config, write_sample_config
-from .notebooks import notebook_name_from_id, resolve_notebook_id_by_name
-from .prompts import interactive_resolve
+from .config import CONFIG_PATH, load_config, save_config, write_sample_config
+from .notebooks import notebook_name_from_id
+from .prompts import interactive_resolve, resolve_notebook_interactively
 from .services import (
     TaskResult,
     extract_pdf,
@@ -53,7 +53,8 @@ def main() -> int:
     if args.notebook_id:
         config['notebook_id'] = args.notebook_id
     if args.notebook:
-        notebook_id, notebook_name = resolve_notebook_id_by_name(config.get('notebooklm_cli', '/Users/home/.local/bin/nlm'), args.notebook)
+        nlm_path = config.get('notebooklm_cli', '/Users/home/.local/bin/nlm')
+        notebook_id, notebook_name = resolve_notebook_interactively(nlm_path, args.notebook)
         config['notebook_id'] = notebook_id
         config['notebook_name'] = notebook_name
     if args.obsidian_dir:
@@ -68,6 +69,13 @@ def main() -> int:
     if not args.non_interactive:
         print(f'PDF: {Path(args.pdf_path).expanduser().resolve()}')
         config = interactive_resolve(config)
+        persisted = load_config()
+        persisted['obsidian_dir'] = config['obsidian_dir']
+        persisted['notebook_id'] = config['notebook_id']
+        persisted['zotero_collection'] = config.get('zotero_collection', '')
+        if config.get('reader_email_account'):
+            persisted['reader_email_account'] = config['reader_email_account']
+        save_config(persisted)
     else:
         if config.get('notebook_id') and not config.get('notebook_name'):
             config['notebook_name'] = notebook_name_from_id(config.get('notebooklm_cli', '/Users/home/.local/bin/nlm'), config['notebook_id'])

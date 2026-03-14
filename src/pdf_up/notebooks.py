@@ -42,7 +42,11 @@ def resolve_notebook_id_by_name(nlm_path: str, name: str) -> tuple[str, str]:
         nb = contains[0]
         return nb['id'], nb['title']
     if len(contains) > 1:
-        options = ', '.join(f"{nb.get('title')} ({nb.get('id')})" for nb in contains[:8])
-        raise PdfUpError(f'Multiple NotebookLM notebooks match "{name}": {options}')
+        raise PdfUpError('MULTIPLE_MATCHES')
 
     raise PdfUpError(f'No NotebookLM notebook matched name: {name}')
+
+
+def find_notebook_matches(nlm_path: str, name: str) -> list[dict[str, Any]]:
+    notebooks = list_notebooks(nlm_path)
+    return [nb for nb in notebooks if name.lower() in nb.get('title', '').lower()]

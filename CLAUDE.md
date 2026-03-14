@@ -48,7 +48,7 @@ Key fields:
 Environment variable overrides are supported.
 
 ## Interactive mode
-By default, `pdf-up` shows current settings (Obsidian folder, NotebookLM notebook by name, Zotero collection) and asks for confirmation before executing. Users can edit any setting inline. The `--yes` / `--non-interactive` flag bypasses all prompts. The `--notebook <name>` flag resolves a notebook name to its ID via the `nlm` CLI.
+By default, `pdf-up` shows current settings (Obsidian folder, NotebookLM notebook by name, Zotero collection) and asks for confirmation before executing. Users can edit any setting inline. After confirmation, interactive choices are persisted back to `~/.config/pdf-up/config.json` so the next run defaults to the last-used values. The `--yes` / `--non-interactive` flag bypasses all prompts. The `--notebook <name>` flag resolves a notebook name to its ID via the `nlm` CLI; if multiple notebooks match, a numbered picker is shown.
 
 Key modules:
 - `prompts.py` — interactive prompt loop with confirm
