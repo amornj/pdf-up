@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import re
@@ -109,9 +108,8 @@ class ZoteroClient:
 
     def authorize_upload(self, attachment_key: str, path: Path) -> dict[str, Any]:
         headers = self.headers | {'If-None-Match': '*'}
-        raw = path.read_bytes()
         payload = {
-            'md5': hashlib.md5(raw).hexdigest(),
+            'md5': hashlib.md5(path.read_bytes()).hexdigest(),
             'filename': path.name,
             'filesize': path.stat().st_size,
             'mtime': int(path.stat().st_mtime * 1000),
@@ -121,22 +119,25 @@ class ZoteroClient:
         r.raise_for_status()
         return r.json()
 
-    def upload_binary(self, auth: dict[str, Any], path: Path) -> None:
+    def upload_binary(self, auth: dict[str, Any], path: Path) -> bool:
+        if auth.get('exists') == 1:
+            return False
         prefix = auth['prefix']
         suffix = auth['suffix']
-        boundary_match = re.search(r'boundary=(.+)$', auth['contentType'])
-        if not boundary_match:
+        content_type = auth['contentType']
+        if 'boundary=' not in content_type:
             raise PdfUpError('Missing multipart boundary in Zotero upload authorization')
-        boundary = boundary_match.group(1)
         body = prefix.encode('utf-8') + path.read_bytes() + suffix.encode('utf-8')
-        headers = {'Content-Type': auth['contentType']}
-        r = requests.post(auth['url'], data=body, headers=headers, timeout=300)
+        r = requests.post(auth['url'], data=body, headers={'Content-Type': content_type}, timeout=300)
         if r.status_code not in (200, 201, 204):
             raise PdfUpError(f'Zotero binary upload failed: {r.status_code} {r.text[:300]}')
+        return True
 
-    def finalize_upload(self, attachment_key: str, upload_key: str) -> None:
+    def finalize_upload(self, attachment_key: str, auth: dict[str, Any]) -> None:
+        if auth.get('exists') == 1:
+            return
         headers = self.headers | {'If-None-Match': '*'}
-        r = requests.post(f'{self.base}/items/{attachment_key}/file', headers=headers, data={'upload': upload_key}, timeout=60)
+        r = requests.post(f'{self.base}/items/{attachment_key}/file', headers=headers, data={'upload': auth['uploadKey']}, timeout=60)
         r.raise_for_status()
 
 
@@ -151,6 +152,8 @@ def upload_to_zotero_web(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult
     parent_key = client.create_parent_item(pdf, collection_key)
     attachment_key = client.create_attachment_item(parent_key, pdf.path.name)
     auth = client.authorize_upload(attachment_key, pdf.path)
-    client.upload_binary(auth, pdf.path)
-    client.finalize_upload(attachment_key, auth['uploadKey'])
-    return TaskResult('zotero', True, f'Uploaded to Zotero collection {collection_name} (parent {parent_key}, attachment {attachment_key})')
+    uploaded = client.upload_binary(auth, pdf.path)
+    client.finalize_upload(attachment_key, auth)
+    if uploaded:
+        return TaskResult('zotero', True, f'Created item "{pdf.title}" with PDF attachment in collection "{collection_name}"')
+    return TaskResult('zotero', True, f'Created item "{pdf.title}" in collection "{collection_name}"; attachment content already existed in Zotero storage')
