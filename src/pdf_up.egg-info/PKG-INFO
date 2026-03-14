@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: pdf-up
+Version: 0.1.0
+Summary: Upload a local PDF to Reader, NotebookLM, Zotero, and Obsidian summary in one command.
+Author: Amorn Jongsathapongpan
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.31.0
+Requires-Dist: PyMuPDF>=1.24.0
+
 # pdf-up
 
 `pdf-up` ingests a local PDF into your research workflow with one command.

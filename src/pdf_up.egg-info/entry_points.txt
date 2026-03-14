@@ -1,0 +1,2 @@
+[console_scripts]
+pdf-up = pdf_up.cli:main

@@ -105,11 +105,14 @@ def upload_to_notebooklm(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult
 
 def upload_to_zotero(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
     app = config.get('zotero_app', 'Zotero')
-    cmd = ['open', '-a', app, str(pdf.path)]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    api_probe = subprocess.run(['curl', '-s', 'http://127.0.0.1:23119/api/'], capture_output=True, text=True, timeout=5)
+    if 'Local API is not enabled' in (api_probe.stdout or ''):
+        return TaskResult('zotero', False, 'Zotero local API/debug bridge is not enabled; automatic PDF import is not available yet')
+
+    proc = subprocess.run(['osascript', '-e', f'tell application "{app}" to activate', '-e', f'tell application "{app}" to open POSIX file "{str(pdf.path)}"'], capture_output=True, text=True, timeout=30)
     if proc.returncode != 0:
         raise PdfUpError(f'Zotero import trigger failed: {(proc.stderr or proc.stdout).strip()[:300]}')
-    return TaskResult('zotero', True, f'Triggered import in {app} via open -a')
+    return TaskResult('zotero', True, f'Triggered import in {app}')
 
 
 def summarize_to_obsidian(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
