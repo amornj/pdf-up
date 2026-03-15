@@ -134,7 +134,7 @@ pdf-up ~/Downloads/paper.pdf \
 Example:
 
 ```text
-[OK] readwise: Sent PDF attachment to amornj@library.readwise.io via Mail account Google
+[OK] readwise: Sent PDF attachment to amornj@library.readwise.io via Mail account Google with tag #amyloidosis
 [OK] notebooklm: Uploaded to NotebookLM ...
 [OK] zotero: Created metadata-only Zotero item in collection "amyloidosis" (...)
 [OK] obsidian: Wrote markdown summary: ...
@@ -170,3 +170,4 @@ This avoids consuming Zotero file storage, while the real PDF lives in Reader an
 
 ### Obsidian summaries
 Summary generation uses the local Claude CLI. Very large PDFs are summarized from extracted text content rather than embedded page images.
+ are summarized from extracted text content rather than embedded page images.

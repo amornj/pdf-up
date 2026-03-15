@@ -51,8 +51,15 @@ def extract_pdf(path: Path) -> PdfDocument:
 def upload_to_readwise(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
     account = config.get('reader_email_account', 'Google')
     forwarding = config.get('reader_forwarding_email', 'amornj@library.readwise.io')
+    notebook_name = (config.get('notebook_name') or '').strip()
+    notebook_tag = ''
+    if notebook_name:
+        notebook_tag = '#' + notebook_name.lower().replace(' ', '-').replace('_', '-').replace('/', '-')
     safe_subject = pdf.title.replace('"', "'")
-    safe_body = f'Imported by pdf-up from local file: {pdf.path}'.replace('"', "'")
+    body = f'Imported by pdf-up from local file: {pdf.path}'
+    if notebook_tag:
+        body += f'\n\n{notebook_tag}'
+    safe_body = body.replace('"', "'")
     safe_path = str(pdf.path).replace('"', '\\"')
     script = f'''
     tell application "Mail"
