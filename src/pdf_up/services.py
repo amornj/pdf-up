@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -72,10 +73,20 @@ def upload_to_readwise(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
       end tell
     end tell
     '''
-    proc = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, timeout=60)
-    if proc.returncode != 0:
-        raise PdfUpError(f'Reader email import failed: {(proc.stderr or proc.stdout).strip()[:400]}')
-    return TaskResult('readwise', True, f'Sent PDF attachment to {forwarding} via Mail account {account}')
+    last_error = None
+    for attempt in (1, 2):
+        try:
+            proc = subprocess.run(['osascript', '-e', script], capture_output=True, text=True, timeout=180)
+            if proc.returncode == 0:
+                details = f'Sent PDF attachment to {forwarding} via Mail account {account}'
+                if notebook_tag:
+                    details += f' with tag {notebook_tag}'
+                return TaskResult('readwise', True, details)
+            last_error = (proc.stderr or proc.stdout).strip()[:400]
+        except subprocess.TimeoutExpired:
+            last_error = 'Mail send timed out'
+        time.sleep(2)
+    raise PdfUpError(f'Reader email import failed after retry: {last_error}')
 
 
 def upload_to_notebooklm(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
