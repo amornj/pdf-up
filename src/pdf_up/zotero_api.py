@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import re
-from pathlib import Path
 from typing import Any
 
 import requests
@@ -82,63 +80,14 @@ class ZoteroClient:
             'date': year or '',
             'DOI': doi or '',
             'collections': [collection_key],
-            'tags': [{'tag': 'pdf-up'}],
-            'extra': f'Imported by pdf-up\nLocal file: {pdf.path}\nPDF hash: {pdf.content_hash}',
+            'tags': [{'tag': 'pdf-up'}, {'tag': 'metadata-only'}],
+            'extra': f'Imported by pdf-up\nLocal file: {pdf.path}\nPDF hash: {pdf.content_hash}\nFull PDF stored in Reader / NotebookLM',
         }
         headers = self.headers | {'Content-Type': 'application/json'}
         r = requests.post(f'{self.base}/items', headers=headers, data=json.dumps([item]), timeout=30)
         r.raise_for_status()
         data = r.json()
         return data['successful']['0']['key']
-
-    def create_attachment_item(self, parent_key: str, filename: str) -> str:
-        item = {
-            'itemType': 'attachment',
-            'parentItem': parent_key,
-            'linkMode': 'imported_file',
-            'title': 'Full Text PDF',
-            'filename': filename,
-            'contentType': 'application/pdf',
-        }
-        headers = self.headers | {'Content-Type': 'application/json'}
-        r = requests.post(f'{self.base}/items', headers=headers, data=json.dumps([item]), timeout=30)
-        r.raise_for_status()
-        data = r.json()
-        return data['successful']['0']['key']
-
-    def authorize_upload(self, attachment_key: str, path: Path) -> dict[str, Any]:
-        headers = self.headers | {'If-None-Match': '*'}
-        payload = {
-            'md5': hashlib.md5(path.read_bytes()).hexdigest(),
-            'filename': path.name,
-            'filesize': path.stat().st_size,
-            'mtime': int(path.stat().st_mtime * 1000),
-            'contentType': 'application/pdf',
-        }
-        r = requests.post(f'{self.base}/items/{attachment_key}/file', headers=headers, data=payload, timeout=60)
-        r.raise_for_status()
-        return r.json()
-
-    def upload_binary(self, auth: dict[str, Any], path: Path) -> bool:
-        if auth.get('exists') == 1:
-            return False
-        prefix = auth['prefix']
-        suffix = auth['suffix']
-        content_type = auth['contentType']
-        if 'boundary=' not in content_type:
-            raise PdfUpError('Missing multipart boundary in Zotero upload authorization')
-        body = prefix.encode('utf-8') + path.read_bytes() + suffix.encode('utf-8')
-        r = requests.post(auth['url'], data=body, headers={'Content-Type': content_type}, timeout=300)
-        if r.status_code not in (200, 201, 204):
-            raise PdfUpError(f'Zotero binary upload failed: {r.status_code} {r.text[:300]}')
-        return True
-
-    def finalize_upload(self, attachment_key: str, auth: dict[str, Any]) -> None:
-        if auth.get('exists') == 1:
-            return
-        headers = self.headers | {'If-None-Match': '*'}
-        r = requests.post(f'{self.base}/items/{attachment_key}/file', headers=headers, data={'upload': auth['uploadKey']}, timeout=60)
-        r.raise_for_status()
 
 
 def upload_to_zotero_web(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult:
@@ -150,10 +99,4 @@ def upload_to_zotero_web(pdf: PdfDocument, config: dict[str, Any]) -> TaskResult
     collection_name = config.get('zotero_collection', '').strip() or 'pdf-up'
     collection_key = client.resolve_collection(collection_name)
     parent_key = client.create_parent_item(pdf, collection_key)
-    attachment_key = client.create_attachment_item(parent_key, pdf.path.name)
-    auth = client.authorize_upload(attachment_key, pdf.path)
-    uploaded = client.upload_binary(auth, pdf.path)
-    client.finalize_upload(attachment_key, auth)
-    if uploaded:
-        return TaskResult('zotero', True, f'Created item "{pdf.title}" with PDF attachment in collection "{collection_name}"')
-    return TaskResult('zotero', True, f'Created item "{pdf.title}" in collection "{collection_name}"; attachment content already existed in Zotero storage')
+    return TaskResult('zotero', True, f'Created metadata-only Zotero item in collection "{collection_name}" (item {parent_key})')

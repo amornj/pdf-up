@@ -21,6 +21,7 @@ def load_config() -> dict[str, Any]:
     env_map = {
         'readwise_token': os.environ.get('PDF_UP_READWISE_TOKEN') or os.environ.get('READWISE_TOKEN'),
         'reader_email_account': os.environ.get('PDF_UP_READER_EMAIL_ACCOUNT'),
+        'reader_forwarding_email': os.environ.get('PDF_UP_READER_FORWARDING_EMAIL'),
         'notebook_id': os.environ.get('PDF_UP_NOTEBOOK_ID'),
         'obsidian_dir': os.environ.get('PDF_UP_OBSIDIAN_DIR'),
         'reader_location': os.environ.get('PDF_UP_READER_LOCATION'),

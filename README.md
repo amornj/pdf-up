@@ -10,16 +10,16 @@ It runs four tasks concurrently:
 
 1. **Readwise Reader** email import of the actual PDF via Mail.app
 2. **NotebookLM** source upload to a preconfigured notebook
-3. **Zotero** Web API upload (item creation + PDF attachment)
+3. **Zotero** Web API metadata-only item creation
 4. **Obsidian** markdown summary generation
 
 ## What it does
 
 Given a local PDF path, `pdf-up`:
 - extracts text from the PDF
-- sends the original PDF as an email attachment to `add@readwise.io` using Mail.app
+- sends the original PDF as an email attachment to your Reader **library forwarding address** using Mail.app
 - uploads the original file to NotebookLM using the local `nlm` CLI
-- uploads the PDF to Zotero via the Web API (creates a document item with PDF attachment)
+- creates a **metadata-only** Zotero item in the requested collection (no PDF attachment upload)
 - generates a markdown summary in your configured Obsidian folder using Claude CLI
 
 ## Install
@@ -62,6 +62,7 @@ Example config:
 {
   "readwise_token": "OPTIONAL_IF_USING_EMAIL_IMPORT",
   "reader_email_account": "Google",
+  "reader_forwarding_email": "amornj@library.readwise.io",
   "notebook_id": "YOUR_NOTEBOOKLM_NOTEBOOK_ID",
   "obsidian_dir": "/Users/home/projects/obsidian/journal",
   "reader_location": "new",
@@ -82,6 +83,7 @@ These override config file values when set:
 
 - `PDF_UP_READWISE_TOKEN`
 - `PDF_UP_READER_EMAIL_ACCOUNT`
+- `PDF_UP_READER_FORWARDING_EMAIL`
 - `PDF_UP_NOTEBOOK_ID`
 - `PDF_UP_OBSIDIAN_DIR`
 - `PDF_UP_READER_LOCATION`
@@ -127,28 +129,14 @@ pdf-up ~/Downloads/paper.pdf \
   --reader-email-account Google
 ```
 
-## Commands
-
-Print config path:
-
-```bash
-pdf-up --config-path
-```
-
-Initialize config:
-
-```bash
-pdf-up --init-config
-```
-
 ## Output
 
-The CLI prints one status line per target, for example:
+Example:
 
 ```text
-[OK] readwise: Sent PDF attachment to add@readwise.io via Mail account Google
+[OK] readwise: Sent PDF attachment to amornj@library.readwise.io via Mail account Google
 [OK] notebooklm: Uploaded to NotebookLM ...
-[OK] zotero: Uploaded to Zotero collection amyloidosis (...)
+[OK] zotero: Created metadata-only Zotero item in collection "amyloidosis" (...)
 [OK] obsidian: Wrote markdown summary: ...
 ```
 
@@ -159,20 +147,26 @@ Exit code:
 ## Notes / caveats
 
 ### Readwise Reader
-`pdf-up` uses **Reader email import** for actual PDFs by sending the file as an attachment to `add@readwise.io` through your local Mail.app account.
+`pdf-up` uses **Reader email import** for actual PDFs by sending the file as an attachment to your **library forwarding address** through Mail.app.
+
+Default forwarding address:
+
+```text
+amornj@library.readwise.io
+```
 
 ### NotebookLM
 This tool expects the local `nlm` CLI to already be authenticated.
 
 ### Zotero
-Zotero integration uses the [Zotero Web API v3](https://www.zotero.org/support/dev/web_api/v3/start). You need a Zotero API key and user ID.
+Zotero integration uses the [Zotero Web API v3](https://www.zotero.org/support/dev/web_api/v3/start).
 
-The integration:
-- looks up or creates a target collection
-- creates a top-level document item with the PDF title
-- uploads the PDF binary as an imported-file attachment via Zotero file storage
+Current Zotero behavior is intentionally **metadata-only**:
+- looks up or creates the target collection
+- creates a top-level bibliographic item
+- does **not** upload the PDF attachment
 
-Supports both user and group libraries via the `zotero_library_type` config field.
+This avoids consuming Zotero file storage, while the real PDF lives in Reader and NotebookLM.
 
 ### Obsidian summaries
 Summary generation uses the local Claude CLI. Very large PDFs are summarized from extracted text content rather than embedded page images.

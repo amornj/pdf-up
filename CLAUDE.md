@@ -17,13 +17,13 @@ Targets:
 - Language: Python
 - Packaging: `pyproject.toml` with console entry point `pdf-up`
 - PDF text extraction: PyMuPDF (`fitz`)
-- Readwise: Mail.app email import to `add@readwise.io` with PDF attachment
+- Readwise: Mail.app email import to the user's Reader library forwarding address with PDF attachment
 - NotebookLM: local `nlm` CLI with `source add --file --wait`
-- Zotero: Web API v3 (collection lookup/create, parent item creation, PDF attachment upload)
+- Zotero: Web API v3, metadata-only item creation in target collection
 - Summary generation: local `claude --print --permission-mode bypassPermissions`
 
 ## Important caveat
-Reader uses Mail.app email import of the actual PDF attachment. Zotero uses the Web API and requires a valid API key/user ID with file-write permissions.
+Reader is the real PDF storage destination. Zotero is intentionally metadata-only to avoid consuming Zotero free-tier file storage.
 
 ## Config
 Primary config file:
@@ -31,12 +31,10 @@ Primary config file:
 `~/.config/pdf-up/config.json`
 
 Key fields:
-- `readwise_token` (optional if using email import only)
 - `reader_email_account`
+- `reader_forwarding_email`
 - `notebook_id`
 - `obsidian_dir`
-- `reader_location`
-- `reader_tags`
 - `summary_model`
 - `zotero_api_key`
 - `zotero_user_id`
@@ -46,13 +44,6 @@ Key fields:
 - `claude_cli`
 
 Environment variable overrides are supported.
-
-## Interactive mode
-By default, `pdf-up` shows current settings (Obsidian folder, NotebookLM notebook by name, Zotero collection) and asks for confirmation before executing. Users can edit any setting inline. After confirmation, interactive choices are persisted back to `~/.config/pdf-up/config.json` so the next run defaults to the last-used values. The `--yes` / `--non-interactive` flag bypasses all prompts. The `--notebook <name>` flag resolves a notebook name to its ID via the `nlm` CLI; if multiple notebooks match, a numbered picker is shown.
-
-Key modules:
-- `prompts.py` — interactive prompt loop with confirm
-- `notebooks.py` — NotebookLM name↔ID resolution via `nlm notebook list`
 
 ## Design goal
 Fast, one-command ingestion with concurrent execution and clear per-target success/failure reporting.
