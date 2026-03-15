@@ -134,7 +134,7 @@ pdf-up ~/Downloads/paper.pdf \
 Example:
 
 ```text
-[OK] readwise: Sent PDF attachment to amornj@library.readwise.io via Mail account Google with tag #amyloidosis
+[OK] readwise: Sent PDF attachment to amornj@library.readwise.io via Mail account Google
 [OK] notebooklm: Uploaded to NotebookLM ...
 [OK] zotero: Created metadata-only Zotero item in collection "amyloidosis" (...)
 [OK] obsidian: Wrote markdown summary: ...
